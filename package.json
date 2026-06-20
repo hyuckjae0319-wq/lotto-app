@@ -1,0 +1,13 @@
+{
+  "name": "lotto-recommender",
+  "version": "1.0.0",
+  "description": "로또번호 추천기 - 통계 기반 스마트 로또 번호 분석 앱",
+  "scripts": {
+    "start": "npx --yes http-server . -p 3000 -c-1 --cors -o",
+    "dev": "npx --yes http-server . -p 3000 -c-1 --cors -o",
+    "fetch-data": "node scripts/fetch-lotto.js"
+  },
+  "keywords": ["lotto", "lottery", "statistics", "pwa"],
+  "author": "",
+  "license": "MIT"
+}

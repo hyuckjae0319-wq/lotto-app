@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="통계 기반 스마트 로또 번호 분석 및 추천 앱 - 역대 당첨번호 분석, 고빈도/저빈도/AI 추천 번호 생성">
+  <meta name="theme-color" content="#0a0e27">
+  <title>로또번호 추천기 🎱</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- 별빛 배경 캔버스 -->
+<canvas id="stars-canvas"></canvas>
+
+<!-- 상단 네비게이션 -->
+<nav class="navbar">
+  <a class="navbar-brand" href="#" onclick="navigate('dashboard');return false">
+    <span class="brand-icon">🎱</span>
+    <span class="brand-text">로또번호 추천기</span>
+  </a>
+
+  <ul class="nav-links">
+    <li>
+      <button class="nav-link active" data-page="dashboard" onclick="navigate('dashboard')">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-text">대시보드</span>
+      </button>
+    </li>
+    <li>
+      <button class="nav-link" data-page="generate" onclick="navigate('generate')">
+        <span class="nav-icon">🎱</span>
+        <span class="nav-text">번호 생성</span>
+      </button>
+    </li>
+    <li>
+      <button class="nav-link" data-page="analysis" onclick="navigate('analysis')">
+        <span class="nav-icon">📊</span>
+        <span class="nav-text">분석</span>
+      </button>
+    </li>
+    <li>
+      <button class="nav-link" data-page="simulator" onclick="navigate('simulator')">
+        <span class="nav-icon">🎰</span>
+        <span class="nav-text">시뮬레이터</span>
+      </button>
+    </li>
+    <li>
+      <button class="nav-link" data-page="history" onclick="navigate('history')">
+        <span class="nav-icon">📋</span>
+        <span class="nav-text">히스토리</span>
+      </button>
+    </li>
+    <li>
+      <button class="nav-link" data-page="favorites" onclick="navigate('favorites')">
+        <span class="nav-icon">⭐</span>
+        <span class="nav-text">저장함</span>
+      </button>
+    </li>
+  </ul>
+
+  <!-- 효과음 토글 -->
+  <button class="btn btn-ghost btn-sm" id="sound-toggle" onclick="toggleSound()" title="효과음 on/off"
+          style="margin-left:8px;font-size:1rem;width:36px;height:36px;border-radius:50%;padding:0">
+    🔊
+  </button>
+</nav>
+
+<!-- 메인 콘텐츠 -->
+<main class="main-content">
+
+  <!-- 업데이트 배너 -->
+  <div class="update-banner hidden" id="update-banner" style="margin:16px 24px 0;max-width:1200px;margin-left:auto;margin-right:auto">
+    <div class="update-dot loading" id="update-dot"></div>
+    <span class="update-msg">데이터 로드 중...</span>
+  </div>
+
+  <!-- 대시보드 페이지 -->
+  <section class="page active" id="page-dashboard">
+    <div class="section-header">
+      <h1>🏠 대시보드</h1>
+      <p>최신 당첨 정보 및 핵심 통계 요약</p>
+    </div>
+    <div id="dashboard-content">
+      <div class="empty-state">
+        <div class="empty-icon">⏳</div>
+        <p>데이터 로드 중...</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 번호 생성 페이지 -->
+  <section class="page" id="page-generate">
+    <!-- renderGenerate()가 채움 -->
+  </section>
+
+  <!-- 분석 페이지 -->
+  <section class="page" id="page-analysis">
+    <!-- renderAnalysis()가 채움 -->
+  </section>
+
+  <!-- 시뮬레이터 페이지 -->
+  <section class="page" id="page-simulator">
+    <!-- renderSimulator()가 채움 -->
+  </section>
+
+  <!-- 히스토리 페이지 -->
+  <section class="page" id="page-history">
+    <!-- renderHistory()가 채움 -->
+  </section>
+
+  <!-- 즐겨찾기 페이지 -->
+  <section class="page" id="page-favorites">
+    <!-- renderFavorites()가 채움 -->
+  </section>
+
+</main>
+
+<!-- 토스트 컨테이너 -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- JS 모듈들 (순서 중요) -->
+<script src="js/sound.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/data.js"></script>
+<script src="js/analysis.js"></script>
+<script src="js/generator.js"></script>
+<script src="js/simulator.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+// ── 효과음 토글 ──
+function toggleSound() {
+  const enabled = !Sound.isEnabled();
+  Sound.setEnabled(enabled);
+  Storage.saveSettings({ soundEnabled: enabled });
+  el('sound-toggle').textContent = enabled ? '🔊' : '🔇';
+  if (enabled) Sound.click();
+  toast(enabled ? '🔊 효과음 켜짐' : '🔇 효과음 꺼짐', 'info', 1500);
+}
+
+// 슬라이더 fill 색상 동적 업데이트
+document.addEventListener('input', (e) => {
+  if (e.target.classList.contains('lotto-slider')) {
+    const min = parseInt(e.target.min) || 1;
+    const max = parseInt(e.target.max) || 5;
+    const val = parseInt(e.target.value);
+    const pct = ((val - min) / (max - min)) * 100;
+    e.target.style.background =
+      `linear-gradient(to right, #ffd700 ${pct}%, rgba(255,255,255,0.08) ${pct}%)`;
+  }
+});
+</script>
+
+</body>
+</html>
